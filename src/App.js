@@ -1,33 +1,24 @@
 import React from 'react';
 import { Form } from 'react-bootstrap';
+import $ from 'jquery';
 import logo from './logo.svg';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
+import prefs from './data/prefs.json';
 
-const prefs = {
-  0: '　',
-  1: '北海道',  2: '青森県',  3: '岩手県',  4: '宮城県',  5: '秋田県',  6: '山形県',  7: '福島県',
-  8: '茨城県',  9: '栃木県',  10: '群馬県',  11: '埼玉県',  12: '千葉県',  13: '東京都',  14: '神奈川県',
-  15: '新潟県',  16: '富山県',  17: '石川県',  18: '福井県',  19: '山梨県',  20: '長野県',  21: '岐阜県',
-  22: '静岡県',  23: '愛知県',  24: '三重県',  25: '滋賀県',  26: '京都府',  27: '大阪府',  28: '兵庫県',
-  29: '奈良県',  30: '和歌山県',  31: '鳥取県',  32: '島根県',  33: '岡山県',  34: '広島県',  35: '山口県',
-  36: '徳島県',  37: '香川県',  38: '愛媛県',  39: '高知県',  40: '福岡県',  41: '佐賀県',  42: '長崎県',
-  43: '熊本県',  44: '大分県',  45: '宮崎県',  46: '鹿児島県',  47: '沖縄県'
-},
-city_api_base = 'https://www.land.mlit.go.jp/webland/api/CitySearch?area=';
+const city_api_base = 'https://www.land.mlit.go.jp/webland/api/CitySearch?area=';
 
 export default class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {pref: '', city: ''};
-  }
 
-  createSelectItems() {
-    let items = [];
-    Object.keys(prefs).forEach(function(key) {
-      items.push(<option key={key} value={this[key]}>{this[key]}</option>)
-    },　prefs)
-    return items;
+    this.onPrefSelected = this.onPrefSelected.bind(this)
+    this.onCitySelected = this.onCitySelected.bind(this)
+
+    this.state = {
+      pref: '',
+      city: ''
+    }
   }
 
   onPrefSelected(e) {
@@ -37,10 +28,33 @@ export default class App extends React.Component {
 
   onCitySelected(e) {
     console.log("city value is", e.target.value);
-    this.setState({pref: '', city: e.target.value});
+    this.setState({city: e.target.value});
   }
 
   render() {
+    console.log("render");
+    let prefItems = [];
+    Object.keys(prefs).forEach(function(key) {
+      prefItems.push(<option key={key} value={key}>{this[key]}</option>)
+    }, prefs)
+
+    let cityItems = [];
+    if (this.state.pref > 0) {
+      let request_url = city_api_base + ('00' + this.state.pref).slice(-2);
+      let result = $.ajax({
+        type: 'GET',
+        url: request_url,
+        dataType: 'json',
+        cache: 'no-cache',
+        async: false
+      }).responseJSON;
+      let cities = result.data;
+      cityItems.push(<option key={0} value={0}>　</option>)
+      Object.keys(cities).forEach(function(city) {
+        cityItems.push(<option key={this[city].id} value={this[city].id}>{this[city].name}</option>)
+      }, cities)
+    }
+
     return (
       <div className="App">
         <header className="App-header">
@@ -48,11 +62,11 @@ export default class App extends React.Component {
           <p>
             Edit <code>src/App.js</code> and save to reload.
           </p>
-          <Form as="select" onChange={this.onPrefSelected.bind(this)} label="Pref Select">
-            {this.createSelectItems()}
+          <Form as="select" onChange={this.onPrefSelected}  value={this.state.pref} label="Pref Select">
+            {prefItems}
           </Form>
-          <Form as="select" onChange={this.onCitySelected.bind(this)} label="City Select">
-            {/* {this.createSelectItems()} */}
+          <Form as="select" onChange={this.onCitySelected} value={this.state.city} label="City Select">
+            {cityItems}
           </Form>
         </header>
       </div>
