@@ -40,15 +40,22 @@ export default class App extends React.Component {
 
     let cityItems = [];
     if (this.state.pref > 0) {
-      let request_url = city_api_base + ('00' + this.state.pref).slice(-2);
-      let result = $.ajax({
-        type: 'GET',
-        url: request_url,
-        dataType: 'json',
-        cache: 'no-cache',
-        async: false
-      }).responseJSON;
-      let cities = result.data;
+      let cities, storageKey = `city${this.state.pref}!`;
+      if (storageKey in localStorage) {
+        console.log("storageから取得");
+        cities = JSON.parse(localStorage.getItem(storageKey));
+      } else {
+        console.log("ajaxから取得");
+        let result = $.ajax({
+          type: 'GET',
+          url: city_api_base + ('00' + this.state.pref).slice(-2),
+          dataType: 'json',
+          cache: 'no-cache',
+          async: false
+        }).responseJSON;
+        cities = result.data;
+        localStorage.setItem(storageKey, JSON.stringify(cities));
+      }
       cityItems.push(<option key={0} value={0}>　</option>)
       Object.keys(cities).forEach(function(city) {
         cityItems.push(<option key={this[city].id} value={this[city].id}>{this[city].name}</option>)
